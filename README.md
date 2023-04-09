@@ -4,6 +4,7 @@
 This script provides instructions for adding assets to a scenario designed for creating a vulnerable path among assets in a Windows Active Directory environment. The configurations of assets are set randomly to ensure a unique scenario every time for practicing purposes. The script is designed to be modularly extended and aimed at improving RedTeam and BlueTeam techniques.
 Please follow the steps carefully to ensure that the assets are added correctly.
 
+The script provides automatic joining procedure for the choosed assets in json configuration. The script have to be run on Domain Controller asset: if there is not any yet, you can run on a Windows Server and it will be promoted to DC automatically.
 This script includes the following vulnerabilities or misconfigurations:
 
 - Default password, not changed by users
