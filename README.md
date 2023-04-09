@@ -20,6 +20,12 @@ This script includes the following vulnerabilities or misconfigurations:
 - Windows Defender exception
 - Parent domain traversal (under development)
 
+## Dependencies
+Put in the same directory:
+
+- MSSQL server setup: [SQL2022-SSEI-Dev.exe](https://go.microsoft.com/fwlink/p/?linkid=2215158&clcid=0x410&culture=it-it&country=it)
+- AD_network.json
+
 ## Prerequisites
 Before adding assets to the scenario, please ensure that the following prerequisites are met:
 

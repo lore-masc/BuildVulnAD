@@ -1,0 +1,33 @@
+{
+  "startExclusion": 1,
+  "mssql": 1,
+  "domain": {
+    "hostname": "dclab",
+    "name": "adlab.local",
+    "netbiosName": "adlab",
+    "dcip": "192.168.1.1",
+    "admin": "Administrator",
+    "password": "p@ssw0rd",
+    "usersLimit": "100"
+  },
+  "assets": [
+    {
+      "hostname": "asset1",
+      "ip": "192.168.1.10",
+      "username": "administrator",
+      "password": "p@ssw0rd"
+    },
+    {
+      "hostname": "asset2",
+      "ip": "192.168.1.11",
+      "username": "administrator",
+      "password": "p@ssw0rd"
+    },
+    {
+      "hostname": "asset3",
+      "ip": "192.168.1.12",
+      "username": "administrator",
+      "password": "p@ssw0rd"
+    }
+  ]
+}
