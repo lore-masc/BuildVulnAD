@@ -47,6 +47,14 @@ Please note the following warnings before adding assets to the scenario:
 - Ensure that new hostnames are different from old ones
 - Use only the built-in "Administrator" local user to allow domain joining (especially for client OS versions). Ensure it is activated on clients and log on with it almost the first time.
 
+## Suggestions
+- Install VM with Windows Server Core (a 'GUI-less' version of Windows) to save disk space.
+- Clone VMs and run the following commands to speed up:
+```
+Sysprep /generalize
+```
+Sysprep generates a new SID for asset allowing successful joining.
+
 ## Conclusion
 By following the above steps and warnings, you should be able to add assets to the scenario successfully. If you encounter any issues, please refer to the troubleshooting guide or contact the support team for assistance.
 
