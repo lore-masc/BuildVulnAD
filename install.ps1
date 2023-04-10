@@ -217,6 +217,7 @@ function VulnAD-AddRemoteDesktopUsers {
             [string]$User         
         )
     Invoke-Command -ComputerName $Hostname -ScriptBlock {
+    	Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -value 0
     	$rdp = (Get-WMIObject -Class Win32_Group -Filter "LocalAccount=True and SID='S-1-5-32-555'").Name
     	cmd /c net localgroup "$rdp" $using:User /add | Out-Null
     }
