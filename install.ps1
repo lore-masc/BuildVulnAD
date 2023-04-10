@@ -463,12 +463,11 @@ function VulnAD-MSSQL{
 	    Get-Service -Name "MSSQLSERVER" | Start-Service
 
 	    Import-Module "C:\Program Files (x86)\Microsoft SQL Server\160\Tools\PowerShell\Modules\SQLPS\SQLPS.psd1"
-	    $smo = 'Microsoft.SqlServer.Management.Smo.'  
-	    $wmi = new-object ($smo + 'Wmi.ManagedComputer'). 
-	    $uri = "ManagedComputer[@Name='$using:Hostname']/ ServerInstance[@Name='MSSQLSERVER']/ServerProtocol[@Name='Tcp']"  
-	    $Tcp = $wmi.GetSmoObject($uri)  
-	    $Tcp.IsEnabled = $true  
-	    $Tcp.Alter() 
+	    $wmi = New-Object 'Microsoft.SqlServer.Management.Smo.Wmi.ManagedComputer' localhost
+		$tcp = $wmi.ServerInstances['MSSQLSERVER'].ServerProtocols['Tcp']
+		$tcp.IsEnabled = $true  
+		$tcp.Alter()
+		Get-Service -Name "MSSQLSERVER" | Restart-Service
 
 	    $server =  New-Object Microsoft.SqlServer.Management.Smo.Server
 	    $SQLLogin = [Microsoft.SqlServer.Management.Smo.Login]::New($Server, $using:SourceUser)
