@@ -1,4 +1,4 @@
-# Buil Vulnerable Active Directory
+# Build Vulnerable Active Directory
 
 ## Introduction
 This script provides instructions for adding assets to a scenario designed for creating a vulnerable path among assets in a Windows Active Directory environment. The configurations of assets are set randomly to ensure a unique scenario every time for practicing purposes. The script is designed to be modularly extended and aimed at improving RedTeam and BlueTeam techniques.
