@@ -17,7 +17,7 @@ This script includes the following vulnerabilities or misconfigurations:
 - User credentials in LSASS
 - Constrained Delegations for Users and Computers
 - Unconstrained Delegations for Computers
-- MSSQL instance command executions (under testing)
+- MSSQL instance command executions
 - Windows Defender exception
 - Parent domain traversal (under development)
 
