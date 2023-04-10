@@ -455,6 +455,9 @@ function VulnAD-MSSQL{
 	   }
 	}
 
+	$TargetUser = $env:USERDOMAIN_ROAMINGPROFILE + "\" + $TargetUser;
+	$SourceUser = $env:USERDOMAIN_ROAMINGPROFILE + "\" + $SourceUser;
+
 	Invoke-Command -ComputerName $Hostname -ScriptBlock {
 	    Get-Service -Name "MSSQLSERVER" | Stop-Service -Force 
 	    $svc_Obj=Get-WmiObject Win32_Service -filter "name='MSSQLSERVER'"
