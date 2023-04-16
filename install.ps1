@@ -383,7 +383,8 @@ function VulnAD-ConstrainedUser {
             [string]$User
         )
     Set-ADUser -Identity $User -ServicePrincipalName @{Add="HTTP/$User"}
-	Get-ADUser -Identity $User | Set-ADObject -Add @{'msDS-AllowedToDelegateTo'="cifs/$Hostname, cifs/$($Hostname).$($Global:Domain)"}
+	Get-ADUser -Identity $User | Set-ADObject -Add @{'msDS-AllowedToDelegateTo'="cifs/$Hostname"}
+	Get-ADUser -Identity $User | Set-ADObject -Add @{'msDS-AllowedToDelegateTo'="cifs/$($Hostname).$($Global:Domain)"}
 	Set-ADAccountControl -Identity $User -TrustedToAuthForDelegation $true
 }
 function VulnAD-ConstrainedComputer {
@@ -398,7 +399,8 @@ function VulnAD-ConstrainedComputer {
             [string]$ComputerAccount
         )
     Set-ADComputer -Identity $ComputerAccount -ServicePrincipalName @{Add="HTTP/$ComputerAccount"}
-	Set-ADComputer -Identity $ComputerAccount -Add @{'msDS-AllowedToDelegateTo'="cifs/$Hostname, cifs/$Hostname.$Global:Domain, ldap/$Hostname, ldap/$Hostname.$Global:Domain"}
+	Set-ADComputer -Identity $ComputerAccount -Add @{'msDS-AllowedToDelegateTo'="cifs/$Hostname.$Global:Domain"}
+	Set-ADComputer -Identity $ComputerAccount -Add @{'msDS-AllowedToDelegateTo'="ldap/$Hostname.$Global:Domain"}
 	Set-ADAccountControl -Identity "$ComputerAccount$" -TrustedToAuthForDelegation $true
 }
 function VulnAD-UnconstrainedComputer {
