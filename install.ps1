@@ -270,8 +270,9 @@ function VulnAD-UnquotedService {
 
     Invoke-Command -ComputerName $Hostname -Credential $Credential -ScriptBlock {
 		icacls "C:\$using:serviceName" /grant BUILTIN\Users:W | Out-Null
-    	cmd /c sc create $using:serviceName binpath= "$using:Path --service" type= own type= interact error= ignore start= demand | Out-Null
+    	cmd /c sc create $using:serviceName binpath= "$using:Path --service" type= own type= interact error= ignore start= auto | Out-Null
 	}
+	.\subinacl.exe /SERVICE \\$Hostname\$ServiceName /setowner= Everyone | Out-Null
 }
 function VulnAD-ServiceFile {
 	[CmdletBinding()]
