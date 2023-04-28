@@ -468,6 +468,7 @@ function VulnAD-MSSQL{
 	                          $null, $using:TargetUser,$using:TargetPassword,$null,$null,$null)
 	    Get-Service -Name "MSSQLSERVER" | Start-Service
 
+        Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
 	    Import-Module "C:\Program Files (x86)\Microsoft SQL Server\160\Tools\PowerShell\Modules\SQLPS\SQLPS.psd1"
 	    $wmi = New-Object 'Microsoft.SqlServer.Management.Smo.Wmi.ManagedComputer' localhost
 		$tcp = $wmi.ServerInstances['MSSQLSERVER'].ServerProtocols['Tcp']
