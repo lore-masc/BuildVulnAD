@@ -564,6 +564,23 @@ import-module ActiveDirectory
 # Create credential object for the domain admin
 $admin = New-Object System.Management.Automation.PSCredential -ArgumentList "$($config.domain.netbiosName)\$($config.domain.admin)", (ConvertTo-SecureString -String $config.domain.password -AsPlainText -Force)
 
+# Test asset availability
+foreach ($asset in $config.assets){
+    # Create credential object for the asset admin
+    $creds = New-Object System.Management.Automation.PSCredential -ArgumentList $asset.username, (ConvertTo-SecureString -String $asset.password -AsPlainText -Force)
+    
+    do {
+        $repeat = $false;
+        $err=Invoke-Command -ComputerName $asset.ip -Credential $creds -ScriptBlock {whoami} 
+        if($err -eq $null){
+            $repeat=$true
+            Write-Bad "$($asset.hostname) ($($asset.ip)) test connection failed"
+        } else {
+            Write-Good "$($asset.hostname) ($($asset.ip)) test connection passed"
+        }
+    } while($repeat)
+}
+
 # Attempt to join for each asset
 foreach ($asset in $config.assets) {
   # Create credential object for the asset admin
