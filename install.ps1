@@ -422,6 +422,10 @@ function VulnAD-MSSQL{
 
             [Parameter(Mandatory=$true)]
             [ValidateNotNullOrEmpty()]
+            [System.Management.Automation.PSCredential]$Credential,
+
+            [Parameter(Mandatory=$true)]
+            [ValidateNotNullOrEmpty()]
             [string]$SourceUser,
 
             [Parameter(Mandatory=$true)]
@@ -461,7 +465,7 @@ function VulnAD-MSSQL{
 	$TargetUser = $env:USERDOMAIN_ROAMINGPROFILE + "\" + $TargetUser;
 	$SourceUser = $env:USERDOMAIN_ROAMINGPROFILE + "\" + $SourceUser;
 
-	Invoke-Command -ComputerName $Hostname -ScriptBlock {
+	Invoke-Command -ComputerName $Hostname -Credential $Credential -ScriptBlock {
 	    Get-Service -Name "MSSQLSERVER" | Stop-Service -Force 
 	    $svc_Obj=Get-WmiObject Win32_Service -filter "name='MSSQLSERVER'"
 	    $ChangeStatus = $svc_Obj.change($null,$null,$null,$null,$null,
@@ -821,7 +825,7 @@ for ($i=0; $i -lt $randomized_assets.Count-1; $i=$i+1) {
     	VulnAD-LocalAdmin -Hostname $linked_hostname -Credential $admin -User $target_user
     	Write-Good "[$i] - Local admin $target_user created on $linked_hostname"
 
-    	VulnAD-MSSQL -Hostname $linked_hostname -SourceUser $user -TargetUser $target_user -TargetPassword $target_pass
+    	VulnAD-MSSQL -Hostname $linked_hostname -Credential $admin -SourceUser $user -TargetUser $target_user -TargetPassword $target_pass
     	Write-Good "[$i] - MSSQL instance installed on $linked_hostname to enable execution by $user as $target_user"
     }
     if ( $vuln_type -eq 4 ) {
