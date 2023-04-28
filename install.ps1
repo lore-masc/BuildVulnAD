@@ -239,7 +239,7 @@ function VulnAD-CreateService {
 	$randomSubFolderName1 = Get-Random -InputObject $commonWords
 	$randomSubFolderName2 = Get-Random -InputObject $commonWords
 	$randomSubFolderPath = "C:\$randomFolderName\$randomSubFolderName1 $randomSubFolderName1"
-	$scriptPath = "$randomSubFolderPath\script.ps1"
+	$scriptPath = "$randomSubFolderPath\script.cmd"
 
 	Invoke-Command -ComputerName $Hostname -Credential $Credential -ScriptBlock {
 		New-Item -ItemType Directory -Path $using:randomSubFolderPath
