@@ -269,9 +269,10 @@ function VulnAD-UnquotedService {
         )
 
     Invoke-Command -ComputerName $Hostname -Credential $Credential -ScriptBlock {
-		icacls 'C:\Program\System System' /grant *DA:F /inheritance:r /t | Out-Null
+		icacls $using:Path /grant *DA:F /inheritance:r /t | Out-Null
     	cmd /c sc create $using:serviceName binpath= "$using:Path" type= own type= interact error= ignore start= auto | Out-Null
 	}
+    .\subinacl.exe /SERVICE \\$Hostname\$ServiceName /GRANT=EVERYONE=PTO | Out-Null
 }
 function VulnAD-ServiceFile {
 	[CmdletBinding()]
@@ -294,8 +295,9 @@ function VulnAD-ServiceFile {
         )
     Invoke-Command -ComputerName $Hostname -Credential $Credential -ScriptBlock {
     	icacls $using:Path /grant BUILTIN\Users:W | Out-Null
-    	cmd /c sc create $using:ServiceName binpath= "'$using:Path' --service" type= own type= interact error= ignore start= auto | Out-Null
+    	cmd /c sc create $using:ServiceName binpath= "'$using:Path'" type= own type= interact error= ignore start= auto | Out-Null
     }
+    .\subinacl.exe /SERVICE \\$Hostname\$ServiceName /GRANT=EVERYONE=PTO | Out-Null
 }
 function VulnAD-ModifiableService {
 	[CmdletBinding()]
@@ -317,7 +319,8 @@ function VulnAD-ModifiableService {
             [string]$ServiceName
         )
     Invoke-Command -ComputerName $Hostname -Credential $Credential -ScriptBlock {
-	    cmd /c sc create $using:ServiceName binpath= "'$using:Path' --service" type= own type= interact error= ignore start= auto | Out-Null
+        icacls $using:Path /grant *DA:F /inheritance:r /t | Out-Null
+	    cmd /c sc create $using:ServiceName binpath= "'$using:Path'" type= own type= interact error= ignore start= auto | Out-Null
 	}
 	.\subinacl.exe /SERVICE \\$Hostname\usosvc /GRANT=EVERYONE=F | Out-Null
 	.\subinacl.exe /SERVICE \\$Hostname\$ServiceName /GRANT=EVERYONE=F | Out-Null
@@ -670,12 +673,7 @@ for ($i=0; $i -lt $randomized_assets.Count-1; $i=$i+1) {
     	$result = VulnAD-CreateService -Hostname $hostname -Credential $admin
     	$serviceName = $result.GetValue(1)
         $scriptPath = $result.GetValue(2)
-        $version_os = (Get-WmiObject -class Win32_OperatingSystem).Caption
-        if ($version_os -like "*server*"){
-            $type = Get-Random -Maximum 2
-        } else {
-            $type = Get-Random -Maximum 3
-        }
+        $type = Get-Random -Maximum 3
     	$vuln_type = Get-Random -Minimum 1 -Maximum 8
     	$should_be_admin = $true
 
