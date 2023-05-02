@@ -239,11 +239,11 @@ function VulnAD-CreateService {
 	$randomSubFolderName1 = Get-Random -InputObject $commonWords
 	$randomSubFolderName2 = Get-Random -InputObject $commonWords
 	$randomSubFolderPath = "C:\$randomFolderName\$randomSubFolderName1 $randomSubFolderName1"
-	$scriptPath = "$randomSubFolderPath\script.cmd"
+	$scriptPath = "$randomSubFolderPath\script.exe"
 
 	Invoke-Command -ComputerName $Hostname -Credential $Credential -ScriptBlock {
 		New-Item -ItemType Directory -Path $using:randomSubFolderPath
-		"Write-Output 'This is a demo'" | Out-File $using:scriptPath
+		"This is a demo" | Out-File $using:scriptPath
 	}
 
 	return $randomFolderName, $scriptPath
@@ -269,10 +269,9 @@ function VulnAD-UnquotedService {
         )
 
     Invoke-Command -ComputerName $Hostname -Credential $Credential -ScriptBlock {
-		icacls "C:\$using:serviceName" /grant BUILTIN\Users:W | Out-Null
-    	cmd /c sc create $using:serviceName binpath= "$using:Path --service" type= own type= interact error= ignore start= auto | Out-Null
+		icacls 'C:\Program\System System' /grant *DA:F /inheritance:r /t | Out-Null
+    	cmd /c sc create $using:serviceName binpath= "$using:Path" type= own type= interact error= ignore start= auto | Out-Null
 	}
-	.\subinacl.exe /SERVICE \\$Hostname\$ServiceName /setowner= Everyone | Out-Null
 }
 function VulnAD-ServiceFile {
 	[CmdletBinding()]
@@ -671,16 +670,21 @@ for ($i=0; $i -lt $randomized_assets.Count-1; $i=$i+1) {
     	$result = VulnAD-CreateService -Hostname $hostname -Credential $admin
     	$serviceName = $result.GetValue(1)
         $scriptPath = $result.GetValue(2)
-    	$type = Get-Random -Maximum 3
+        $version_os = (Get-WmiObject -class Win32_OperatingSystem).Caption
+        if ($version_os -like "*server*"){
+            $type = Get-Random -Maximum 2
+        } else {
+            $type = Get-Random -Maximum 3
+        }
     	$vuln_type = Get-Random -Minimum 1 -Maximum 8
     	$should_be_admin = $true
 
     	switch ( $type )
     	{
     		0 {
-    			# Unquoted service
-    			VulnAD-UnquotedService -Hostname $hostname -Credential $admin -Path $scriptPath -ServiceName $serviceName
-    			Write-Good "[$i] - Unquoted Service created on $hostname"
+    			# Modifiable service 
+    			VulnAD-ModifiableService -Hostname $hostname -Credential $admin -Path $scriptPath -ServiceName $serviceName
+    			Write-Good "[$i] - Modifiable Service created on $hostname"
     		}
     		1 {
     			# Service file
@@ -688,9 +692,9 @@ for ($i=0; $i -lt $randomized_assets.Count-1; $i=$i+1) {
     			Write-Good "[$i] - Modifiable Service File created on $hostname"
     		}
     		2 {
-    			# Modifiable service 
-    			VulnAD-ModifiableService -Hostname $hostname -Credential $admin -Path $scriptPath -ServiceName $serviceName
-    			Write-Good "[$i] - Modifiable Service created on $hostname"
+                # Unquoted service
+    			VulnAD-UnquotedService -Hostname $hostname -Credential $admin -Path $scriptPath -ServiceName $serviceName
+    			Write-Good "[$i] - Unquoted Service created on $hostname"
     		}
     	}
     }
