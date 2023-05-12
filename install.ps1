@@ -511,6 +511,32 @@ function VulnAD-CreateExclusion {
 	  Add-MpPreference -ExclusionPath $using:path
     }
 }
+function VulnAD-RandomVuln {
+    Param(
+        [Parameter(Mandatory=$true)]
+        [ValidateNotNullOrEmpty()]
+        [int]$Iteration
+    )
+    if ($Iteration -eq 0) {
+		$randomNumber = Get-Random -Maximum 5
+	} else {
+		$randomNumber = Get-Random -Maximum 8
+	}
+
+    if ($randomNumber -eq 0) {
+        $vuln_type = $randomNumber
+    } else {
+        $coinToss = Get-Random -Minimum 0 -Maximum 4
+        if ($coinToss -eq 0) {
+            $vuln_type = 0
+        }
+        else {
+            $vuln_type = $randomNumber
+        }
+    }
+
+    return $vuln_type
+}
 
 # Show Banner
 ShowBanner
@@ -652,11 +678,7 @@ for ($i=0; $i -lt $randomized_assets.Count-1; $i=$i+1) {
 	# Select random vulnerability on first asset
 	$repeat = $false
 	do {
-		if ($i -eq 0) {
-			$vuln_type = Get-Random -Maximum 5
-		} else {
-			$vuln_type = Get-Random -Minimum  1 -Maximum 8
-		}
+		$vuln_type = VulnAD-RandomVuln -Iteration $i
 
 		if ($config.mssql -eq 0 -and $vuln_type -eq 3) {
 			$repeat = $true
@@ -699,10 +721,10 @@ for ($i=0; $i -lt $randomized_assets.Count-1; $i=$i+1) {
     if ( $vuln_type -eq 1 ) { 
     	# Local Admin to next node
     	
-    	if ($i -eq 0 -and $should_be_admin -eq $false) {
-    		$user_type = 1
+    	if ($should_be_admin -eq $false) {
+    		$user_type = Get-Random -Minimum 1 -Maximum 3
     	} else {
-    		$user_type = Get-Random -Maximum 3
+    		$user_type = 0
     	}
     	
     	# Get attacker user
@@ -730,10 +752,10 @@ for ($i=0; $i -lt $randomized_assets.Count-1; $i=$i+1) {
     if ( $vuln_type -eq 2 ) {
     	# User constrained delegation
 
-    	if ($i -eq 0 -and $should_be_admin -eq $false) {
-    		$user_type = 1
+    	if ($should_be_admin -eq $false) {
+    		$user_type = Get-Random -Minimum 1 -Maximum 3
     	} else {
-    		$user_type = Get-Random -Maximum 3
+    		$user_type = 0
     	}
 
     	# Get LSASS user
@@ -771,22 +793,18 @@ for ($i=0; $i -lt $randomized_assets.Count-1; $i=$i+1) {
     	Write-Good "[$i] - Constrained delegation created for $user to $linked_hostname"
     }
     if ( $vuln_type -eq 3 ) {
+        # MSSQL instance
+
     	# Skip if the next host is the DC: is not possible to allow a standard user to log in DC's db.
         if ($i+1 -eq $randomized_assets.Count-1) {
-            if ($i -eq 0) {
-			    $vuln_type = Get-Random -Maximum 5
-		    } else {
-			    $vuln_type = Get-Random -Minimum  1 -Maximum 8
-		    }
             $i = $i - 1;
             continue;
         }
 
-    	# MSSQL instance
-    	if ($i -eq 0 -and $should_be_admin -eq $false) {
-    		$user_type = 1
+    	if ($should_be_admin -eq $false) {
+    		$user_type = Get-Random -Minimum 1 -Maximum 3
     	} else {
-    		$user_type = Get-Random -Maximum 3
+    		$user_type = 0
     	}
 
     	# Get LSASS user
