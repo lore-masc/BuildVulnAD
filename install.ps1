@@ -721,14 +721,15 @@ for ($i=0; $i -lt $randomized_assets.Count-1; $i=$i+1) {
     if ( $vuln_type -eq 1 ) { 
     	# Local Admin to next node
     	
-    	if ($should_be_admin -eq $false) {
+    	if ($i -gt 0 -and $should_be_admin -eq $false) {
     		$user_type = Get-Random -Minimum 1 -Maximum 3
     	} else {
-    		$user_type = 0
+    		$user_type = Get-Random -Maximum 3
     	}
     	
     	# Get attacker user
-    	if ( $user_type -eq 0 ) {    		
+    	if ( $user_type -eq 0 ) { 
+            # Only for the first vulnerability	
     		$user = $attacker_username
     	}
     	
