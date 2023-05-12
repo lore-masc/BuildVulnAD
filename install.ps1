@@ -850,11 +850,17 @@ for ($i=0; $i -lt $randomized_assets.Count-1; $i=$i+1) {
     }
     if ( $vuln_type -eq 4 ) {
     	# DCSync attack
+    
+        # Run if the next host is the DC.
+        if ($i+1 -lt $randomized_assets.Count-1) {            
+            $i = $i - 1;
+            continue;
+        }
 
-    	if ($i -eq 0 -and $should_be_admin -eq $false) {
-    		$user_type = 1
+    	if ($should_be_admin -eq $false) {
+    		$user_type = Get-Random -Minimum 1 -Maximum 3
     	} else {
-    		$user_type = Get-Random -Maximum 3
+    		$user_type = 0
     	}
 
     	# Get LSASS user
