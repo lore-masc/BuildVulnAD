@@ -677,15 +677,7 @@ for ($i=0; $i -lt $randomized_assets.Count-1; $i=$i+1) {
 
 	# Select random vulnerability on first asset
 	$repeat = $false
-	do {
-		$vuln_type = VulnAD-RandomVuln -Iteration $i
-
-		if ($config.mssql -eq 0 -and $vuln_type -eq 3) {
-			$repeat = $true
-		} else {
-			$repeat = $false
-		}
-	} while ($repeat);
+	$vuln_type = VulnAD-RandomVuln -Iteration $i
 
 	# Generate the vulnerability on asset
 	$should_be_admin = $false
@@ -797,7 +789,7 @@ for ($i=0; $i -lt $randomized_assets.Count-1; $i=$i+1) {
         # MSSQL instance
 
     	# Skip if the next host is the DC: is not possible to allow a standard user to log in DC's db.
-        if ($i+1 -eq $randomized_assets.Count-1) {
+        if ( ($i+1 -eq $randomized_assets.Count-1) -or ($config.mssql -eq 0) ) {
             $i = $i - 1;
             continue;
         }
