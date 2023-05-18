@@ -681,7 +681,7 @@ for ($i=0; $i -lt $randomized_assets.Count-1; $i=$i+1) {
 
 	# Generate the vulnerability on asset
 	$should_be_admin = $false
-	if ( $vuln_type -eq 0 ) {
+	if ( $vuln_type -eq 0 -and $should_be_admin -eq $false ) {
     
     	# Service abuse
     	$result = VulnAD-CreateService -Hostname $hostname -Credential $admin
