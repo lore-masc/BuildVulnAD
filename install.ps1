@@ -596,7 +596,7 @@ import-module ActiveDirectory
 # Create credential object for the domain admin
 $admin = New-Object System.Management.Automation.PSCredential -ArgumentList "$($config.domain.netbiosName)\$($config.domain.admin)", (ConvertTo-SecureString -String $config.domain.password -AsPlainText -Force)
 
-# Test asset availability
+# Test asset availability using local admin creds
 foreach ($asset in $config.assets){
     # Create credential object for the asset admin
     $creds = New-Object System.Management.Automation.PSCredential -ArgumentList $asset.username, (ConvertTo-SecureString -String $asset.password -AsPlainText -Force)
@@ -661,6 +661,21 @@ VulnAD-PwdInObjectDescription
 Write-Good "Password In Object Description Done"
 VulnAD-DefaultPassword
 Write-Good "Default Password Done"
+
+# Test asset availability using domain admin creds
+foreach ($asset in $config.assets){
+    
+    do {
+        $repeat = $false;
+        $err=Invoke-Command -ComputerName $asset.ip -Credential $admin -ScriptBlock {whoami} 
+        if($err -eq $null){
+            $repeat=$true
+            Write-Bad "$($asset.hostname) ($($asset.ip)) test connection failed"
+        } else {
+            Write-Good "$($asset.hostname) ($($asset.ip)) test connection passed"
+        }
+    } while($repeat)
+}
 
 # CREATE VULNERABLE PATH
 # Create attacker user
