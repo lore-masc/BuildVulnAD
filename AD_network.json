@@ -2,32 +2,34 @@
   "startExclusion": 1,
   "mssql": 1,
   "domain": {
-    "hostname": "dclab",
-    "name": "adlab.local",
-    "netbiosName": "adlab",
+    "hostname": "dcc",
+    "name": "child.parent.local",
+    "netbiosName": "child",
     "dcip": "192.168.1.1",
     "admin": "Administrator",
-    "password": "p@ssw0rd",
-    "usersLimit": "100"
+    "password": "Password%",
+    "usersLimit": "50"
+  },
+  "parent": {
+    "hostname": "dcp",
+    "name": "parent.local",
+    "netbiosName": "parent",
+    "dcip": "192.168.1.2",
+    "admin": "Administrator",
+    "password": "Password%"
   },
   "assets": [
     {
-      "hostname": "asset1",
-      "ip": "192.168.1.10",
+      "hostname": "srv",
+      "ip": "192.168.1.3",
       "username": "administrator",
-      "password": "p@ssw0rd"
+      "password": "Password%"
     },
     {
-      "hostname": "asset2",
-      "ip": "192.168.1.11",
-      "username": "administrator",
-      "password": "p@ssw0rd"
-    },
-    {
-      "hostname": "asset3",
-      "ip": "192.168.1.12",
-      "username": "administrator",
-      "password": "p@ssw0rd"
+      "hostname": "work",
+      "ip": "192.168.1.4",
+      "username": "Administrator",
+      "password": "Password%"
     }
   ]
 }
