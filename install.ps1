@@ -560,7 +560,56 @@ $Global:Domain = $config.domain.name
 # Define users limit
 $UsersLimit = $config.domain.usersLimit
 
-# Check Active Directory installation status.
+# Create credential object for the local admin and the domain admin
+$admin = New-Object System.Management.Automation.PSCredential -ArgumentList $($config.domain.admin), (ConvertTo-SecureString -String $config.domain.password -AsPlainText -Force)
+if ( $config.parent -ne $null ) {
+    $parent_admin = New-Object System.Management.Automation.PSCredential -ArgumentList "$($config.parent.netbiosName)\$($config.parent.admin)", (ConvertTo-SecureString -String $config.parent.password -AsPlainText -Force)
+}
+
+# Parent domain installation
+if ( $config.parent -ne $null ) {
+    # Check Active Directory installation status.
+    $installState = $(Invoke-Command -ComputerName $config.parent.dcip -Credential $parent_admin -ScriptBlock {(Get-WindowsFeature -Name "AD-domain-services").InstallState}).value
+
+    if ($installState -eq "Installed") {
+  	    # Active Directory is already installed
+  	    Write-Output "Active Directory has been already installed on parent domain."
+    } else {
+  	    # Active Directory is not installed
+  	    Write-Info "Active Directory is not installed yet on parent domain."
+
+        $parent_hostname = Invoke-Command -ComputerName $config.parent.dcip -Credential $parent_admin -ScriptBlock { HOSTNAME }   
+
+  	    if ($parent_hostname -ne $config.parent.hostname) {
+	  	    
+		    # Da eseguire nel dc parent
+            Invoke-Command -ComputerName $config.parent.dcip -Credential $parent_admin -ScriptBlock {
+		        Rename-Computer -NewName $using:config.parent.hostname -Restart -Force
+            }
+            Write-Good "Parent Domain controller hostname renamed."
+            Write-Info "Waiting after parent domain DC restarts"
+            cmd /c pause
+
+	  	    # if you didn't install Active Directory yet, you can try
+            # Da eseguire nel dc parent
+            Invoke-Command -ComputerName $config.parent.dcip -Credential $parent_admin -ScriptBlock { 
+		        Install-windowsfeature AD-domain-services
+		        Import-Module ADDSDeployment
+		        Install-ADDSForest -CreateDnsDelegation:$false -DatabasePath "C:\\Windows\\NTDS" -DomainMode "7" -DomainName $using:config.parent.name -DomainNetbiosName $using:config.parent.netbiosName -ForestMode "7" -InstallDns:$true -LogPath "C:\\Windows\\NTDS" -NoRebootOnCompletion:$false -SysvolPath "C:\\Windows\\SYSVOL" -SafeModeAdministratorPassword (ConvertTo-SecureString "$using:config.parent.password" -AsPlainText -Force) -Force:$true
+            }
+            Write-Good "Active Directory installed on parent DC."
+            Write-Info "Waiting after parent domain DC restarts"
+            cmd /c pause
+	    }
+    }
+
+    # Set DNS Forwarder to parent DC
+    Invoke-Command -ComputerName $config.parent.dcip -Credential $parent_admin -ScriptBlock { 
+		    Add-DnsServerForwarder -IPAddress 1.1.1.1 -PassThru | Out-Null
+    }
+}
+
+# Child domain installation
 $installState = (Get-WindowsFeature -Name "AD-domain-services").InstallState
 
 if ($installState -eq "Installed") {
@@ -571,24 +620,37 @@ else {
   	# Active Directory is not installed
   	Write-Info "Active Directory is not installed yet."
 
-  	if ($(HOSTNAME) -ne $config.domain.hostname) {
+    if ($(HOSTNAME) -ne $config.domain.hostname) {
 	  	# Rename DC
-		Rename-Computer -NewName $config.domain.hostname
-		Write-Good "Domain controller hostname renamed. Restart this script after reboot."
+        Rename-Computer -NewName $config.domain.hostname
+        Write-Good "Domain controller hostname renamed. Restart this script after reboot."
+        exit
 	} else {
 	  	# if you didn't install Active Directory yet, you can try 
-		Install-windowsfeature AD-domain-services
-		Import-Module ADDSDeployment
-		Install-ADDSForest -CreateDnsDelegation:$false -DatabasePath "C:\\Windows\\NTDS" -DomainMode "7" -DomainName $Global:Domain -DomainNetbiosName $config.netbiosName -ForestMode "7" -InstallDns:$true -LogPath "C:\\Windows\\NTDS" -NoRebootOnCompletion:$false -SysvolPath "C:\\Windows\\SYSVOL" -SafeModeAdministratorPassword (ConvertTo-SecureString "$config.domain.admin" -AsPlainText -Force) -Force:$true
+        if ( $config.parent -eq $null ) {
+		    Install-windowsfeature AD-domain-services
+		    Import-Module ADDSDeployment
+		    Install-ADDSForest -CreateDnsDelegation:$false -DatabasePath "C:\\Windows\\NTDS" -DomainMode "7" -DomainName $config.domain.name -DomainNetbiosName $config.domain.netbiosName -ForestMode "7" -InstallDns:$true -LogPath "C:\\Windows\\NTDS" -NoRebootOnCompletion:$false -SysvolPath "C:\\Windows\\SYSVOL" -SafeModeAdministratorPassword (ConvertTo-SecureString "$config.domain.password" -AsPlainText -Force) -Force:$true
+        } else {
+            # Da eseguire nel dc child
+            $eth = Get-NetAdapter -Name * | ?{$_.Status -eq 'Up'} | Format-Table Name -HideTableHeaders | Out-String
+            Set-DnsClientServerAddress -InterfaceAlias $eth.Trim() -ServerAddresses ($config.parent.dcip)
+
+            Install-windowsfeature AD-domain-services
+            Import-Module ADDSDeployment
+            Install-ADDSDomain -NewDomainName $config.domain.netbiosName -ParentDomainName $config.parent.name -InstallDNS -CreateDNSDelegation -SafeModeAdministratorPassword (ConvertTo-SecureString -AsPlainText "$config.domain.password" -Force) -credential $parent_admin -force
+
+            w32tm /config /update /manualpeerlist:dc-master /syncfromflags:manual /reliable:yes
+            w32tm /query /source
+            w32tm /resync /rediscover            
+            #######
+        }
+        Write-Good "Now Windows should be restarted. Restart this script after reboot."
 	}
-	# Computer reboot
-	Write-Good "Now Windows should be restarted. Restart this script after reboot."
-	exit
 }
 
 # Set DNS Forwarder to DC
 Add-DnsServerForwarder -IPAddress 1.1.1.1 -PassThru | Out-Null
-
 
 # COMPUTER JOINS
 import-module ActiveDirectory
@@ -936,6 +998,9 @@ $Global:Spacing + ''
 Write-Good "Vulnerable path"
 for ($i=0; $i -lt $randomized_assets.Count; $i=$i+1) {
 	Write-Info $randomized_assets[$i]
+}
+if ( $config.parent -ne $null ) {
+    Write-Info $config.parent.hostname
 }
 
 # Select first asset
