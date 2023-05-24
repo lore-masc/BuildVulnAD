@@ -4,7 +4,7 @@
 This script provides instructions for adding assets to a scenario designed for creating a vulnerable path among assets in a Windows Active Directory environment. The configurations of assets are set randomly to ensure a unique scenario every time for practicing purposes. The script is designed to be modularly extended and aimed at improving RedTeam and BlueTeam techniques.
 Please follow the steps carefully to ensure that the assets are added correctly.
 
-The script provides automatic joining procedure for the choosed assets in json configuration. The script have to be run on Domain Controller asset: if there is not any yet, you can run on a Windows Server and it will be promoted to DC automatically.
+The script provides automatic joining procedure for the choosed assets in json configuration. The script have to be run on Domain Controller of the child domain: if there is not any yet, you can run on a Windows Server and it will be promoted to DC automatically.
 This script includes the following vulnerabilities or misconfigurations:
 
 - Default password, not changed by users
@@ -17,9 +17,9 @@ This script includes the following vulnerabilities or misconfigurations:
 - User credentials in LSASS
 - Constrained Delegations for Users and Computers
 - Unconstrained Delegations for Computers
-- MSSQL instance command executions
-- Windows Defender exception
-- Parent domain traversal (under development)
+- MSSQL instance command executions (*optional*)
+- Windows Defender exception (*optional*)
+- Parent domain traversal (*optional*)
 
 ## Dependencies
 Put in the same directory:
@@ -46,6 +46,9 @@ Please note the following warnings before adding assets to the scenario:
 
 - Ensure that new hostnames are different from old ones
 - Use only the built-in "Administrator" local user to allow domain joining (especially for client OS versions). Ensure it is activated on clients and log on with it almost the first time.
+
+## Optionals
+You can decide to build a single domain removing "parent" key from json.
 
 ## Suggestions
 - Install VM with Windows Server Core (a 'GUI-less' version of Windows) to save disk space.
