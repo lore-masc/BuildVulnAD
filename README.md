@@ -20,6 +20,7 @@ This script includes the following vulnerabilities or misconfigurations:
 - MSSQL instance command executions (*optional*)
 - Windows Defender exception (*optional*)
 - Parent domain traversal (*optional*)
+- Active Directory Certificate Services (AD CS)
 
 ## Dependencies
 Put in the same directory:

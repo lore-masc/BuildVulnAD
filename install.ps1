@@ -511,6 +511,40 @@ function VulnAD-CreateExclusion {
 	  Add-MpPreference -ExclusionPath $using:path
     }
 }
+function VulnAD-CARoot{
+	[CmdletBinding()]
+        param(
+            [Parameter(Mandatory=$true)]
+            [ValidateNotNullOrEmpty()]
+            [string]$Hostname,
+
+            [Parameter(Mandatory=$true)]
+            [ValidateNotNullOrEmpty()]
+            [System.Management.Automation.PSCredential]$Credential
+    )
+
+    $DistinguishedName=$((Get-ADDomain -Identity (Get-WmiObject Win32_ComputerSystem).Domain).DistinguishedName)
+
+    Invoke-Command -ComputerName $Hostname -ScriptBlock {
+        Enable-WindowsOptionalFeature -Online -FeatureName IIS-WebServerRole, IIS-WebServer, IIS-CommonHttpFeatures, IIS-ManagementConsole, IIS-HttpErrors, IIS-HttpRedirect, IIS-WindowsAuthentication, IIS-StaticContent, IIS-DefaultDocument, IIS-HttpCompressionStatic, IIS-DirectoryBrowsing
+
+        # ADCS
+        Add-WindowsFeature Adcs-Cert-Authority -IncludeManagementTools 
+        Install-AdcsCertificationAuthority -credential $using:Credential -CAType EnterpriseRootCA -CACommonName "$($using:Hostname)-CA-1" -CADistinguishedNameSuffix $using:DistinguishedName -CryptoProviderName "RSA#Microsoft Software Key Storage Provider" -KeyLength 2048 -HashAlgorithmName SHA1 -ValidityPeriod Years -ValidityPeriodUnits 3 -DatabaseDirectory "C:\windows\system32\certLog" -LogDirectory "c:\windows\system32\CertLog" -Force
+
+        Import-Module ServerManager
+        Add-WindowsFeature adcs-web-enrollment
+        Add-WindowsFeature Adcs-Enroll-Web-Pol
+        Add-WindowsFeature Adcs-Enroll-Web-Svc        
+        Install-AdcsWebEnrollment -force
+
+        # disable anonymous IIS login, enable windows authentication
+        $iisSiteName = "Default Web Site"
+        $iisAppName = "CertSrv"
+        Set-WebConfigurationProperty -Filter '/system.webServer/security/authentication/anonymousAuthentication' -Name 'enabled' -Value 'false' -PSPath 'IIS:\' -Location "$iisSiteName/$iisAppName"
+        Set-WebConfigurationProperty -Filter '/system.webServer/security/authentication/windowsAuthentication' -Name 'enabled' -Value 'true' -PSPath 'IIS:\' -Location "$iisSiteName/$iisAppName"   
+    }
+}
 function VulnAD-RandomVuln {
     Param(
         [Parameter(Mandatory=$true)]
@@ -737,6 +771,23 @@ foreach ($asset in $config.assets){
             Write-Good "$($asset.hostname) ($($asset.ip)) test connection passed"
         }
     } while($repeat)
+}
+
+# Install CA on a Windows Server
+$installCA = Get-Random -Maximum 2
+if ($installCA -eq 1) {
+    $repeat = $true;
+    do {
+        $index = Get-Random -Maximum $Global:Assets.Count
+        $random_asset = $Global:Assets[$index]
+        $version = $(Invoke-Command -ComputerName $random_asset -Credential $admin -ScriptBlock {(Get-WmiObject Win32_OperatingSystem).Caption})
+        if ( $version -like "*Server*" ) {
+            $repeat = $false
+        }
+    } while($repeat);
+    Write-Info "Installing AC root installed on $random_asset..."
+    VulnAD-CARoot -Hostname $random_asset -Credential $admin
+    Write-Good "AC root installed on $random_asset"
 }
 
 # CREATE VULNERABLE PATH
