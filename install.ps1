@@ -722,7 +722,11 @@ foreach ($asset in $config.assets) {
     Add-Computer -DomainName $using:config.domain.name -Credential $using:admin   
   }
 
-  Rename-Computer -ComputerName $asset.ip -NewName $asset.hostname -DomainCredential $admin -Restart -Force
+  Try {
+    Rename-Computer -ComputerName $asset.ip -NewName $asset.hostname -DomainCredential $admin -Restart -Force -ErrorAction Stop
+  } Catch {
+    Restart-Computer -ComputerName $asset.ip -Credential $creds -Force
+  }
 
   if ($errmsg.Count -gt 0) {
   	Write-Bad "Asset $($asset.hostname) not added to domain $($Global:Domain)"
