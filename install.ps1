@@ -295,7 +295,7 @@ function VulnAD-ServiceFile {
         )
     Invoke-Command -ComputerName $Hostname -Credential $Credential -ScriptBlock {
     	icacls $using:Path /grant BUILTIN\Users:W | Out-Null
-    	cmd /c sc create $using:ServiceName binpath= "'$using:Path'" type= own type= interact error= ignore start= auto | Out-Null
+     	New-Service -Name $using:ServiceName -BinaryPathName '"$using:Path"' | Out-Null
     }
     .\subinacl.exe /SERVICE \\$Hostname\$ServiceName /GRANT=EVERYONE=PTO | Out-Null
 }
@@ -529,13 +529,13 @@ function VulnAD-CARoot{
         Enable-WindowsOptionalFeature -Online -FeatureName IIS-WebServerRole, IIS-WebServer, IIS-CommonHttpFeatures, IIS-ManagementConsole, IIS-HttpErrors, IIS-HttpRedirect, IIS-WindowsAuthentication, IIS-StaticContent, IIS-DefaultDocument, IIS-HttpCompressionStatic, IIS-DirectoryBrowsing
 
         # ADCS
-        Add-WindowsFeature Adcs-Cert-Authority -IncludeManagementTools 
+        Add-WindowsFeature Adcs-Cert-Authority -IncludeManagementToolsÂ 
         Install-AdcsCertificationAuthority -credential $using:Credential -CAType EnterpriseRootCA -CACommonName "$($using:Hostname)-CA-1" -CADistinguishedNameSuffix $using:DistinguishedName -CryptoProviderName "RSA#Microsoft Software Key Storage Provider" -KeyLength 2048 -HashAlgorithmName SHA1 -ValidityPeriod Years -ValidityPeriodUnits 3 -DatabaseDirectory "C:\windows\system32\certLog" -LogDirectory "c:\windows\system32\CertLog" -Force
 
         Import-Module ServerManager
         Add-WindowsFeature adcs-web-enrollment
         Add-WindowsFeature Adcs-Enroll-Web-Pol
-        Add-WindowsFeature Adcs-Enroll-Web-Svc        
+        Add-WindowsFeature Adcs-Enroll-Web-SvcÂ Â Â      
         Install-AdcsWebEnrollment -force
 
         # disable anonymous IIS login, enable windows authentication
